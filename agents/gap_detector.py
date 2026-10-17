@@ -44,6 +44,24 @@ In 1-2 sentences, describe the research gap this represents. Return JSON: {{"des
 """
 
 
+SYNTHESIS_PROMPT = """\
+EVIDENCE (literature-wide limitations and open problems across {n_papers} papers on topic "{topic}"):
+
+{paper_lines}
+
+Identify 2-3 concrete, high-impact research gaps that emerge from these unaddressed limitations or untested combinations.
+Return JSON in this format:
+{{
+  "gaps": [
+    {{
+      "description": "1-2 sentence description of the research gap",
+      "paper_ids": ["id1", "id2"]
+    }}
+  ]
+}}
+"""
+
+
 class GapDetectorAgent:
     def __init__(self, llm: LLMClient | None = None):
         self.llm = llm or LLMClient()
@@ -99,8 +117,8 @@ class GapDetectorAgent:
         gaps = []
         for c in contradictions:
             description = (
-                f"Unresolved disagreement: '{c.claim_a}' vs '{c.claim_b}' "
-                "— a replication or reconciliation study is a concrete gap here."
+                f"Unresolved empirical conflict: '{c.claim_a}' vs '{c.claim_b}' "
+                "— a rigorous replication or reconciliation study represents a critical gap."
             )
             gaps.append(
                 CandidateGap(
@@ -112,3 +130,44 @@ class GapDetectorAgent:
                 )
             )
         return gaps
+
+    def from_literature_synthesis(
+        self, summaries: list[PaperSummary], topic: str
+    ) -> list[CandidateGap]:
+        """Triangulate overarching research gaps from limitations across the corpus."""
+        valid_summaries = [s for s in summaries if s.limitations and s.limitations.lower() not in ("not specified", "none", "n/a")]
+        if not valid_summaries:
+            valid_summaries = summaries[:10]
+
+        if not valid_summaries:
+            return []
+
+        paper_lines = "\n".join(
+            f"Paper [{s.paper_id}] '{s.problem}': Method='{s.method}', Limitations='{s.limitations}'"
+            for s in valid_summaries[:12]
+        )
+
+        prompt = SYNTHESIS_PROMPT.format(n_papers=len(valid_summaries), topic=topic, paper_lines=paper_lines)
+        data = self.llm.complete_json(prompt, system=SYSTEM_PROMPT)
+
+        gaps = []
+        gap_items = data.get("gaps", [])
+        if isinstance(gap_items, list):
+            for item in gap_items:
+                desc = item.get("description", "").strip()
+                if not desc:
+                    continue
+                pids = item.get("paper_ids", [])
+                if not isinstance(pids, list) or not pids:
+                    pids = [s.paper_id for s in valid_summaries[:2]]
+                gaps.append(
+                    CandidateGap(
+                        gap_id=str(uuid.uuid4())[:8],
+                        description=desc,
+                        related_paper_ids=pids,
+                        evidence_type="llm_synthesis",
+                        raw_evidence={"synthesis_basis": "cross-paper limitations"},
+                    )
+                )
+        return gaps
+

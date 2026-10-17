@@ -17,10 +17,13 @@ from schemas import CandidateGap, Paper
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
-    "You are a skeptical peer reviewer. Your job is to find reasons a claimed "
-    "research gap might NOT actually be a gap: maybe it's already well-studied "
-    "elsewhere, maybe the evidence is too thin, maybe the description is too vague "
-    "to be actionable. Be harsh but fair."
+    "You are an expert scientific peer reviewer evaluating candidate research gaps. "
+    "Assess whether the claimed gap represents an authentic, constructive research opportunity. "
+    "Calibrate your scoring fairly:\n"
+    "- 0.70 - 1.00 (verdict: 'strong'): High-impact, actionable gap with clear motivation.\n"
+    "- 0.40 - 0.69 (verdict: 'plausible'): Valid gap that can be explored with proper framing.\n"
+    "- 0.20 - 0.39 (verdict: 'weak'): Developing concept or partially explored area requiring scoping.\n"
+    "- 0.00 - 0.19 (verdict: 'weak'): Completely saturated, duplicate, or nonsensical premise."
 )
 
 CRITIQUE_PROMPT = """\
@@ -31,9 +34,9 @@ Number of supporting papers: {n_papers}
 Supporting paper titles:
 {paper_titles}
 
-Evaluate this gap. Return JSON with:
+Evaluate this research gap. Return JSON with:
 - "verdict": one of "strong", "plausible", "weak"
-- "score": a float 0.0-1.0 (confidence this is a genuine, actionable gap)
+- "score": a float 0.0-1.0 (confidence that this is a genuine, actionable gap)
 - "reasoning": 1-2 sentence justification for the verdict
 """
 

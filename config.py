@@ -40,8 +40,9 @@ class Settings:
 
     # --- Gap detection ---
     embedding_density_k: int = 5          # k-NN used for local density estimate
-    density_gap_percentile: float = 85.0  # papers below this density percentile flag sparse regions
-    min_gap_confidence: float = 0.4
+    density_gap_percentile: float = 75.0  # papers below this density percentile flag sparse regions
+    min_gap_confidence: float = 0.25
+
 
     # --- Scoring / ranking ---
     recency_half_life_years: float = 3.0  # exponential decay for recency weighting

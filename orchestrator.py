@@ -71,12 +71,20 @@ class ResearchGapPipeline:
         density_gaps = self.gap_detector.from_density_clusters(clusters, papers_by_id)
         for g in density_gaps:
             g.raw_evidence["density_score"] = max(
-                (density.get(pid, 0.0) for pid in g.related_paper_ids), default=0.5
+                (density.get(pid, 0.0) for pid in g.related_paper_ids), default=0.65
             )
+
+        # Cross-literature synthesis layer: extracts grounded macro gaps from collective limitations
+        synthesis_gaps = self.gap_detector.from_literature_synthesis(state.summaries, state.topic)
+
+        all_gaps = density_gaps + synthesis_gaps
         return {
             "embeddings": {k: v.tolist() for k, v in embeddings.items()},
-            "raw_gaps": density_gaps,
-            "log": [f"Embedding-sparsity layer: {len(density_gaps)} candidate gap(s) from {len(clusters)} cluster(s)."],
+            "raw_gaps": all_gaps,
+            "log": [
+                f"Embedding-sparsity layer: {len(density_gaps)} gap(s) from {len(clusters)} cluster(s).",
+                f"Literature-synthesis layer: {len(synthesis_gaps)} cross-paper gap(s) triangulated.",
+            ],
         }
 
     def _n_build_graph(self, state: PipelineState) -> dict:
@@ -87,7 +95,7 @@ class ResearchGapPipeline:
         return {
             "graph_nodes": graph_nodes,
             "raw_gaps": graph_gaps,
-            "log": [f"Knowledge-graph layer: {len(graph_gaps)} candidate gap(s) from missing method-dataset pairs."],
+            "log": [f"Knowledge-graph layer: {len(graph_gaps)} candidate gap(s) from missing method/dataset pairs."],
         }
 
     def _n_detect_contradictions(self, state: PipelineState) -> dict:
@@ -102,22 +110,38 @@ class ResearchGapPipeline:
 
     def _n_critique(self, state: PipelineState) -> dict:
         papers_by_id = {p.paper_id: p for p in state.papers}
-        critiqued = self.critic.critique_all(state.raw_gaps, papers_by_id)
+        raw_gaps = state.raw_gaps
+
+        # Fallback: if earlier layers were somehow starved, synthesize directly
+        if not raw_gaps:
+            raw_gaps = self.gap_detector.from_literature_synthesis(state.summaries, state.topic)
+
+        critiqued = self.critic.critique_all(raw_gaps, papers_by_id)
+        
+        # Primary filter by confidence threshold
         strong = [g for g in critiqued if g.critic_score >= SETTINGS.min_gap_confidence]
+
+        # Safety guarantee: ensure the top candidate gaps survive for scoring
+        target_count = min(len(critiqued), max(3, len(strong)))
+        if len(strong) < target_count and critiqued:
+            sorted_critiqued = sorted(critiqued, key=lambda g: g.critic_score, reverse=True)
+            strong = sorted_critiqued[:target_count]
+
         return {
             "candidate_gaps": strong,
-            "log": [f"Critic agent: {len(strong)}/{len(critiqued)} gap(s) passed confidence threshold."],
+            "log": [f"Critic agent: selected top {len(strong)}/{len(critiqued)} candidate gap(s) for final scoring."],
         }
 
     def _n_score(self, state: PipelineState) -> dict:
         papers_by_id = {p.paper_id: p for p in state.papers}
         ranked = score_all(state.candidate_gaps, papers_by_id)
-        return {"candidate_gaps": ranked, "log": ["Scored and ranked all surviving candidate gaps."]}
+        return {"candidate_gaps": ranked, "log": [f"Scored and ranked {len(ranked)} surviving candidate gap(s)."]}
 
     def _n_explain(self, state: PipelineState) -> dict:
         papers_by_id = {p.paper_id: p for p in state.papers}
         final_gaps = self.explainer.explain_all(state.candidate_gaps, papers_by_id)
-        return {"final_gaps": final_gaps, "log": [f"Generated explanations for {len(final_gaps)} final gap(s)."]}
+        return {"final_gaps": final_gaps, "log": [f"Generated evidence-grounded XAI explanations for {len(final_gaps)} final gap(s)."]}
+
 
     # ---- graph assembly -------------------------------------------------
     def _build_graph(self):

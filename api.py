@@ -132,12 +132,16 @@ def _patched_pipeline(job_id: str, topic: str, max_results: int) -> None:
 
             setattr(pipeline, f"_n_{node_name}", make_wrapper(original, label, node_name))
 
+        # Recompile graph so LangGraph registers the wrapped progress/log methods
+        pipeline.graph = pipeline._build_graph()
+
         _jobs[job_id]["progress"] = f"Starting pipeline for: {topic!r}"
         state = pipeline.run(topic)
 
         _jobs[job_id]["status"] = "done"
         _jobs[job_id]["progress"] = f"Complete — {len(state.final_gaps)} gap(s) found"
         _jobs[job_id]["result"] = state.model_dump()
+
 
     except Exception as exc:
         logger.exception("Pipeline failed for job %s", job_id)

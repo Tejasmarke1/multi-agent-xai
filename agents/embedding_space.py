@@ -92,11 +92,18 @@ class EmbeddingSpaceAgent:
         from sklearn.cluster import AgglomerativeClustering
 
         sub_matrix = np.vstack([embeddings[i] for i in sparse_ids])
-        n_clusters = max(1, len(sparse_ids) // 3)
-        labels = AgglomerativeClustering(n_clusters=n_clusters, metric="cosine", linkage="average").fit_predict(
-            sub_matrix
-        )
-        clusters: dict[int, list[str]] = {}
-        for pid, label in zip(sparse_ids, labels):
-            clusters.setdefault(label, []).append(pid)
-        return list(clusters.values())
+        n_clusters = max(1, min(4, len(sparse_ids) // 2))
+        if n_clusters == 1 and len(sparse_ids) >= 3:
+            n_clusters = 2
+
+        try:
+            labels = AgglomerativeClustering(n_clusters=n_clusters, metric="cosine", linkage="average").fit_predict(
+                sub_matrix
+            )
+            clusters: dict[int, list[str]] = {}
+            for pid, label in zip(sparse_ids, labels):
+                clusters.setdefault(label, []).append(pid)
+            return list(clusters.values())
+        except Exception:
+            return [[pid] for pid in sparse_ids]
+
