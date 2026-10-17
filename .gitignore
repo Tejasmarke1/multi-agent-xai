@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Local application data
+.cache/
+*.log
+
+# Dashboard dependencies and build output
+dashboard/node_modules/
+dashboard/dist/
+dashboard/dist-ssr/
+dashboard/*.local
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

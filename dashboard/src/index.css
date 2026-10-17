@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ultra-refined dark theme as the default core */
+    --background: 224 71% 3.5%;       /* #050811 - deep obsidian */
+    --foreground: 210 40% 98%;        /* #f8fafc - crisp white */
+    --card: 224 55% 5.5%;             /* #0a0f1d - slate obsidian */
+    --card-foreground: 210 40% 98%;
+    --popover: 224 55% 5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;           /* #3b82f6 - electric blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 35% 10%;         /* #111827 - dark slate */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 30% 9.5%;            /* #0e1626 */
+    --muted-foreground: 215 20% 65%;   /* #94a3b8 */
+    --accent: 224 40% 12%;            /* #131c31 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;         /* #ef4444 */
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 25% 12%;            /* rgba(255,255,255,0.08) */
+    --input: 220 25% 12%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
+  }
+
+  .light {
+    --background: 220 25% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 93%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 221 83% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom dark scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Glassmorphism surfaces */
+.glass-panel {
+  background: rgba(10, 15, 29, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-card {
+  background: rgba(13, 20, 36, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px 0 rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Glowing brand background radial */
+.ambient-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.12) 0%, rgba(99, 102, 241, 0.04) 40%, transparent 70%);
+}
+
+.subtle-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Evidence badges */
+.badge-embedding {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+}
+
+.badge-graph {
+  background: rgba(14, 165, 233, 0.12);
+  color: #7dd3fc;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.15);
+}
+
+.badge-contradiction {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.15);
+}
+
+.badge-synthesis {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+/* Score bar gradient */
+.score-bar {
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 25px -3px rgba(59, 130, 246, 0.4);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.4);
+}
+
+.glow-violet {
+  box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.4);
+}
+
+/* Terminal aesthetic */
+.terminal-window {
+  background: #040711;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Graph visualization */
+.graph-node {
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.graph-node:hover {
+  filter: drop-shadow(0 0 8px currentColor);
+}
